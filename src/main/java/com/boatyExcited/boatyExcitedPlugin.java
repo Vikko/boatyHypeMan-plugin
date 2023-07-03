@@ -91,7 +91,7 @@ public class boatyExcitedPlugin extends Plugin {
 		if (!this.isLoggedIn) {
 			if (event.getGameState().equals(GameState.LOGGED_IN)) {
 				if (config.announceLogin()){
-					SoundEngine.playSound(Sound.LOGIN);
+					SoundEngine.playSound(Sound.LOGIN, config.announcementVolume());
 					this.isLoggedIn = true;
 					return;
 				}
@@ -130,7 +130,7 @@ public class boatyExcitedPlugin extends Plugin {
 		final String list = configManager.getConfiguration("grounditems", "highlightedItems").toLowerCase();
 		if (list.contains(itemComposition.getName().toLowerCase()) || notifyValue <= itemComposition.getPrice()) {
 			if (config.announceDrops()){
-				SoundEngine.playSound(money[random.nextInt(money.length)]);
+				SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
 				return;
 			}
 		}
@@ -139,7 +139,7 @@ public class boatyExcitedPlugin extends Plugin {
 	@Subscribe
 	public void onActorDeath(ActorDeath actorDeath) {
 		if (config.announceDeath() && actorDeath.getActor() == client.getLocalPlayer()) {
-			SoundEngine.playSound(death[random.nextInt(death.length)]);
+			SoundEngine.playSound(death[random.nextInt(death.length)], config.announcementVolume());
 		}
 	}
 
@@ -152,7 +152,7 @@ public class boatyExcitedPlugin extends Plugin {
 
 			) {
 				if (config.announceMaxHit()){
-				SoundEngine.playSound(Sound.MAXHIT);
+				SoundEngine.playSound(Sound.MAXHIT, config.announcementVolume());
 			}
 			}
 		}
@@ -165,7 +165,7 @@ public class boatyExcitedPlugin extends Plugin {
 		if (config.rubyBoltSpec()) {
 			if (soundId == 2911) {
 				event.consume();
-				SoundEngine.playSound(Sound.RUBYSPEC);
+				SoundEngine.playSound(Sound.RUBYSPEC, config.announcementVolume());
 				return;
 			}
 		}
@@ -187,7 +187,7 @@ public class boatyExcitedPlugin extends Plugin {
 
 		// If we get here, 'skill' was leveled up!
 		if (config.announceLevelUp()) {
-			soundEngine.playSound(levelup[random.nextInt(levelup.length)]);
+			soundEngine.playSound(levelup[random.nextInt(levelup.length)], config.announcementVolume());
 		}
 	}
 
@@ -197,17 +197,17 @@ public class boatyExcitedPlugin extends Plugin {
 			return;
 		}
 		if (config.announceCollectionLog() && COLLECTION_LOG_ITEM_REGEX.matcher(chatMessage.getMessage()).matches()) {
-			soundEngine.playSound(collLog[random.nextInt(collLog.length)]);
+			soundEngine.playSound(collLog[random.nextInt(collLog.length)], config.announcementVolume());
 		} else if (config.announceCombatAchievement() && COMBAT_TASK_REGEX.matcher(chatMessage.getMessage()).matches()) {
-			soundEngine.playSound(combat_task[random.nextInt(combat_task.length)]);
+			soundEngine.playSound(combat_task[random.nextInt(combat_task.length)], config.announcementVolume());
 		} else if (config.announceQuestCompletion() && QUEST_REGEX.matcher(chatMessage.getMessage()).matches()) {
-			soundEngine.playSound(quest[random.nextInt(quest.length)]);
+			soundEngine.playSound(quest[random.nextInt(quest.length)], config.announcementVolume());
 		}else if (config.announcePets() && chatMessage.getMessage().contains(FOLLOW_PET)){
-			soundEngine.playSound(Sound.PET);
+			soundEngine.playSound(Sound.PET, config.announcementVolume());
 		} else if (config.announcePets() && chatMessage.getMessage().contains(INVENTORY_PET)){
-			soundEngine.playSound(Sound.PET);
+			soundEngine.playSound(Sound.PET, config.announcementVolume());
 		}else if (config.announcePets() && chatMessage.getMessage().contains(DUPE_PET)){
-			soundEngine.playSound(Sound.PET);
+			soundEngine.playSound(Sound.PET, config.announcementVolume());
 		}
 	}
 }

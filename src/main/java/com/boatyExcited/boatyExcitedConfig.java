@@ -8,9 +8,9 @@ import net.runelite.client.config.ConfigItem;
 
 
 @ConfigGroup(boatyExcitedConfig.GROUP)
-public interface boatyExcitedConfig extends Config
-{
+public interface boatyExcitedConfig extends Config {
     String GROUP = "boatyExcited";
+
     @ConfigItem(
             keyName = "announceLevel",
             name = "Level ups",
@@ -111,4 +111,14 @@ public interface boatyExcitedConfig extends Config
         return true;
     }
 
+
+    @ConfigItem(
+            keyName = "volume",
+            name = "Volume",
+            description = "Adjust how the audio is",
+            position = 10
+    )
+    default int announcementVolume() {
+        return 100;
+    }
 }
