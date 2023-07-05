@@ -26,7 +26,7 @@ public class SoundFileManager {
     private static final File DOWNLOAD_DIR = new File(RuneLite.RUNELITE_DIR.getPath() + File.separator + "boaty-excited");
     private static final String DELETE_WARNING_FILENAME = "EXTRA_FILES_WILL_BE_DELETED_BUT_FOLDERS_WILL_REMAIN";
     private static final File DELETE_WARNING_FILE = new File(DOWNLOAD_DIR, DELETE_WARNING_FILENAME);
-    private static final HttpUrl RAW_GITHUB = HttpUrl.parse("https://raw.githubusercontent.com/Devdeve/woo-plugin/sounds");
+    private static final HttpUrl RAW_GITHUB = HttpUrl.parse("https://raw.githubusercontent.com/Devdeve/boatyHypeMan-plugin/sounds");
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void ensureDownloadDirectoryExists() {
