@@ -141,11 +141,11 @@ public class boatyExcitedPlugin extends Plugin {
 		// Check each item in the list individually - prevents false positives due to partial item names, e.g. A drop of "Seaweed" matching highlighted item "Seaweed spore"
 		final String list = configManager.getConfiguration("grounditems", "highlightedItems").toLowerCase();
 		final String[] listItems = list.split(",");
-		final String itemName = itemComposition.getName().toLowerCase();
+		final String itemName = itemComposition.getName();
 		
 		for (String listItem: listItems)
 		{
-			if (listItem.trim().toLowerCase() == itemName)
+			if (listItem.trim().equalsIgnoreCase(itemName))
 			{
 				SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
 				return;
