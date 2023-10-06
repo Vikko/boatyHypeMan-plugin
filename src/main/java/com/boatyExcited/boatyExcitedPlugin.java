@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import javax.inject.Inject;
 
 import lombok.AccessLevel;
@@ -67,6 +68,7 @@ public class boatyExcitedPlugin extends Plugin {
 	private static final Pattern COLLECTION_LOG_ITEM_REGEX = Pattern.compile("New item added to your collection log:.*");
 	private static final Pattern COMBAT_TASK_REGEX = Pattern.compile("Congratulations, you've completed an? (?:\\w+) combat task:.*");
 	private static final Pattern QUEST_REGEX = Pattern.compile("Congratulations, you've completed a quest:.*");
+	private static final Pattern HIGHLIGHTED_ITEM = Pattern.compile("^(.+)([<>])([0-9]+)$");
 	// Pet Drops
 	private static final String FOLLOW_PET = "You have a funny feeling like you're being followed";
 	private static final String INVENTORY_PET = "You feel something weird sneaking into your backpack";
@@ -129,6 +131,7 @@ public class boatyExcitedPlugin extends Plugin {
 		
 		final TileItem item = itemSpawned.getItem();
 		final int id = item.getId();
+		final int quantity = item.getQuantity();
 		final ItemComposition itemComposition = itemManager.getItemComposition(id);
 
 		// Check notify value first as easiest to check
@@ -145,10 +148,39 @@ public class boatyExcitedPlugin extends Plugin {
 		
 		for (String listItem: listItems)
 		{
+			// Check item name first, quicker;
 			if (listItem.trim().equalsIgnoreCase(itemName))
 			{
 				SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
 				return;
+			}
+
+			// Check the supported "Item name>5" and "Item name<5"
+			final Matcher itemMatcher = HIGHLIGHTED_ITEM.matcher(listItem);
+			if (!itemMatcher.find())
+				continue;
+
+			if (!m.group(1).equalsIgnoreCase(itemName))
+				continue;
+
+			final String comparison = m.group(2);
+			final int quantityLimit = Integer.parseInt(m.group(3));
+
+			if (comparison.equals(">"))
+			{
+				if (quantity > quantityLimit)
+				{
+					SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
+					return;
+				}
+			}
+			else
+			{
+				if (quantity < quantityLimit)
+				{
+					SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
+					return;
+				}
 			}
 		}
 	}
