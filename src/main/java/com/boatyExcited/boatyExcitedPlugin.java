@@ -123,13 +123,30 @@ public class boatyExcitedPlugin extends Plugin {
 
 	@Subscribe
 	public void onItemSpawned(ItemSpawned itemSpawned) {
+		// If sound disabled, exit method without processing
+		if (!config.announceDrops())
+			return;
+		
 		final TileItem item = itemSpawned.getItem();
 		final int id = item.getId();
 		final ItemComposition itemComposition = itemManager.getItemComposition(id);
+
+		// Check notify value first as easiest to check
 		final int notifyValue = Integer.parseInt(configManager.getConfiguration("grounditems", "highValuePrice"));
+		if (notifyValue <= itemComposition.getPrice()) {
+			SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
+			return;
+		}
+
+		// Check each item in the list individually - prevents false positives due to partial item names, e.g. A drop of "Seaweed" matching highlighted item "Seaweed spore"
 		final String list = configManager.getConfiguration("grounditems", "highlightedItems").toLowerCase();
-		if (list.contains(itemComposition.getName().toLowerCase()) || notifyValue <= itemComposition.getPrice()) {
-			if (config.announceDrops()){
+		final String[] listItems = list.split(",");
+		final String itemName = itemComposition.getName().toLowerCase();
+		
+		for (String listItem: listItems)
+		{
+			if (listItem.trim().toLowerCase() == itemName)
+			{
 				SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
 				return;
 			}
