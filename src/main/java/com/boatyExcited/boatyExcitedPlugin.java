@@ -122,6 +122,48 @@ public class boatyExcitedPlugin extends Plugin {
 		} catch (IOException ignored) {
 		}
 	}
+	
+	private static boolean itemListContains(final String list, final String itemName, final int quantity)
+	{
+		final String[] listItems = list.split(",");
+		
+		for (String listItem: listItems)
+		{
+			listItem = listItem.trim();
+			
+			// Check item name first, quicker;
+			if (listItem.equalsIgnoreCase(itemName))
+			{
+				return true;
+			}
+			
+			final Matcher m = HIGHLIGHTED_ITEM.matcher(listItem);
+			if (!m.find())
+				continue;
+			
+			if (!m.group(1).equalsIgnoreCase(itemName))
+				continue;
+			
+			final String comparison = m.group(2);
+			final int quantityLimit = Integer.parseInt(m.group(3));
+			if (comparison.equals(">"))
+			{
+				if (quantity > quantityLimit)
+				{
+					return true;
+				}
+			}
+			else
+			{
+				if (quantity < quantityLimit)
+				{
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
 
 	@Subscribe
 	public void onItemSpawned(ItemSpawned itemSpawned) {
@@ -133,6 +175,12 @@ public class boatyExcitedPlugin extends Plugin {
 		final int id = item.getId();
 		final int quantity = item.getQuantity();
 		final ItemComposition itemComposition = itemManager.getItemComposition(id);
+		final String itemName = itemComposition.getName();
+
+		// Check hidden list, exit if found
+		final String hiddenItems = configManager.getConfiguration("grounditems", "hiddenItems");
+		if (itemListContains(hiddenItems, itemName, quantity))
+			return;
 
 		// Check notify value first as easiest to check
 		final int notifyValue = Integer.parseInt(configManager.getConfiguration("grounditems", "highValuePrice"));
@@ -142,46 +190,11 @@ public class boatyExcitedPlugin extends Plugin {
 		}
 
 		// Check each item in the list individually - prevents false positives due to partial item names, e.g. A drop of "Seaweed" matching highlighted item "Seaweed spore"
-		final String list = configManager.getConfiguration("grounditems", "highlightedItems").toLowerCase();
-		final String[] listItems = list.split(",");
-		final String itemName = itemComposition.getName();
-		
-		for (String listItem: listItems)
+		final String highlightedItems = configManager.getConfiguration("grounditems", "highlightedItems");
+		if (itemListContains(highlightedItems, itemName, quantity))
 		{
-			// Check item name first, quicker;
-			if (listItem.trim().equalsIgnoreCase(itemName))
-			{
-				SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
-				return;
-			}
-
-			// Check the supported "Item name>5" and "Item name<5"
-			final Matcher itemMatcher = HIGHLIGHTED_ITEM.matcher(listItem);
-			if (!itemMatcher.find())
-				continue;
-
-			if (!m.group(1).equalsIgnoreCase(itemName))
-				continue;
-
-			final String comparison = m.group(2);
-			final int quantityLimit = Integer.parseInt(m.group(3));
-
-			if (comparison.equals(">"))
-			{
-				if (quantity > quantityLimit)
-				{
-					SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
-					return;
-				}
-			}
-			else
-			{
-				if (quantity < quantityLimit)
-				{
-					SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
-					return;
-				}
-			}
+			SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
+			return;
 		}
 	}
 
