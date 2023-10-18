@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import javax.inject.Inject;
 
 import lombok.AccessLevel;
@@ -67,6 +68,7 @@ public class boatyExcitedPlugin extends Plugin {
 	private static final Pattern COLLECTION_LOG_ITEM_REGEX = Pattern.compile("New item added to your collection log:.*");
 	private static final Pattern COMBAT_TASK_REGEX = Pattern.compile("Congratulations, you've completed an? (?:\\w+) combat task:.*");
 	private static final Pattern QUEST_REGEX = Pattern.compile("Congratulations, you've completed a quest:.*");
+	private static final Pattern HIGHLIGHTED_ITEM = Pattern.compile("^(.+)([<>])([0-9]+)$");
 	// Pet Drops
 	private static final String FOLLOW_PET = "You have a funny feeling like you're being followed";
 	private static final String INVENTORY_PET = "You feel something weird sneaking into your backpack";
@@ -120,19 +122,79 @@ public class boatyExcitedPlugin extends Plugin {
 		} catch (IOException ignored) {
 		}
 	}
+	
+	private static boolean itemListContains(final String list, final String itemName, final int quantity)
+	{
+		final String[] listItems = list.split(",");
+		
+		for (String listItem: listItems)
+		{
+			listItem = listItem.trim();
+			
+			// Check item name first, quicker;
+			if (listItem.equalsIgnoreCase(itemName))
+			{
+				return true;
+			}
+			
+			final Matcher m = HIGHLIGHTED_ITEM.matcher(listItem);
+			if (!m.find())
+				continue;
+			
+			if (!m.group(1).equalsIgnoreCase(itemName))
+				continue;
+			
+			final String comparison = m.group(2);
+			final int quantityLimit = Integer.parseInt(m.group(3));
+			if (comparison.equals(">"))
+			{
+				if (quantity > quantityLimit)
+				{
+					return true;
+				}
+			}
+			else
+			{
+				if (quantity < quantityLimit)
+				{
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
 
 	@Subscribe
 	public void onItemSpawned(ItemSpawned itemSpawned) {
+		// If sound disabled, exit method without processing
+		if (!config.announceDrops())
+			return;
+		
 		final TileItem item = itemSpawned.getItem();
 		final int id = item.getId();
+		final int quantity = item.getQuantity();
 		final ItemComposition itemComposition = itemManager.getItemComposition(id);
+		final String itemName = itemComposition.getName();
+
+		// Check hidden list, exit if found
+		final String hiddenItems = configManager.getConfiguration("grounditems", "hiddenItems");
+		if (itemListContains(hiddenItems, itemName, quantity))
+			return;
+
+		// Check notify value first as easiest to check
 		final int notifyValue = Integer.parseInt(configManager.getConfiguration("grounditems", "highValuePrice"));
-		final String list = configManager.getConfiguration("grounditems", "highlightedItems").toLowerCase();
-		if (list.contains(itemComposition.getName().toLowerCase()) || notifyValue <= itemComposition.getPrice()) {
-			if (config.announceDrops()){
-				SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
-				return;
-			}
+		if (notifyValue <= itemComposition.getPrice()) {
+			SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
+			return;
+		}
+
+		// Check each item in the list individually - prevents false positives due to partial item names, e.g. A drop of "Seaweed" matching highlighted item "Seaweed spore"
+		final String highlightedItems = configManager.getConfiguration("grounditems", "highlightedItems");
+		if (itemListContains(highlightedItems, itemName, quantity))
+		{
+			SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
+			return;
 		}
 	}
 
