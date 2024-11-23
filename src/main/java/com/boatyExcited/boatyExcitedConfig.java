@@ -115,7 +115,7 @@ public interface boatyExcitedConfig extends Config {
             keyName = "announceLeaguesTask",
             name = "When you get a task in Leagues",
             description = "Should Boaty recognise you getting a leagues task?",
-            position = 9
+            position = 10
     )
     default boolean announceLeaguesTask() {
         return true;
@@ -126,7 +126,7 @@ public interface boatyExcitedConfig extends Config {
             keyName = "volume",
             name = "Volume",
             description = "Adjust how the audio is",
-            position = 10
+            position = 11
     )
     default int announcementVolume() {
         return 100;
