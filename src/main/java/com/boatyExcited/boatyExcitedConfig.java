@@ -111,6 +111,16 @@ public interface boatyExcitedConfig extends Config {
         return true;
     }
 
+    @ConfigItem(
+            keyName = "announceLeaguesTask",
+            name = "When you get a task in Leagues",
+            description = "Should Boaty recognise you getting a leagues task?",
+            position = 9
+    )
+    default boolean announceLeaguesTask() {
+        return true;
+    }
+
 
     @ConfigItem(
             keyName = "volume",

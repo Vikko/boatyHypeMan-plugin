@@ -67,6 +67,7 @@ public class boatyExcitedPlugin extends Plugin {
 	private final Map<Skill, Integer> oldExperience = new EnumMap<>(Skill.class);
 	private static final Pattern COLLECTION_LOG_ITEM_REGEX = Pattern.compile("New item added to your collection log:.*");
 	private static final Pattern COMBAT_TASK_REGEX = Pattern.compile("Congratulations, you've completed an? (?:\\w+) combat task:.*");
+	private static final Pattern LEAGUES_TASK_REGEX = Pattern.compile("Congratulations, you've completed an? (?:\\w+) task:.*");
 	private static final Pattern QUEST_REGEX = Pattern.compile("Congratulations, you've completed a quest:.*");
 	private static final Pattern HIGHLIGHTED_ITEM = Pattern.compile("^(.+)([<>])([0-9]+)$");
 	// Pet Drops
@@ -264,12 +265,14 @@ public class boatyExcitedPlugin extends Plugin {
 			soundEngine.playSound(combat_task[random.nextInt(combat_task.length)], config.announcementVolume());
 		} else if (config.announceQuestCompletion() && QUEST_REGEX.matcher(chatMessage.getMessage()).matches()) {
 			soundEngine.playSound(quest[random.nextInt(quest.length)], config.announcementVolume());
-		}else if (config.announcePets() && chatMessage.getMessage().contains(FOLLOW_PET)){
+		} else if (config.announcePets() && chatMessage.getMessage().contains(FOLLOW_PET)){
 			soundEngine.playSound(Sound.PET, config.announcementVolume());
 		} else if (config.announcePets() && chatMessage.getMessage().contains(INVENTORY_PET)){
 			soundEngine.playSound(Sound.PET, config.announcementVolume());
-		}else if (config.announcePets() && chatMessage.getMessage().contains(DUPE_PET)){
+		} else if (config.announcePets() && chatMessage.getMessage().contains(DUPE_PET)){
 			soundEngine.playSound(Sound.PET, config.announcementVolume());
+		} else if (config.announceLeaguesTask() && LEAGUES_TASK_REGEX.matcher(chatMessage.getMessage()).matches()) {
+			soundEngine.playSound(combat_task[random.nextInt(combat_task.length)], config.announcementVolume());
 		}
 	}
 }
