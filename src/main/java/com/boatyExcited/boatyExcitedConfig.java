@@ -3,8 +3,7 @@ package com.boatyExcited;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
-
-
+import net.runelite.client.config.ConfigSection;
 
 
 @ConfigGroup(boatyExcitedConfig.GROUP)
@@ -81,11 +80,63 @@ public interface boatyExcitedConfig extends Config {
         return true;
     }
 
+    @ConfigSection(
+            name = "Drops",
+            description = "Configure drop options.",
+            position = 7,
+            closedByDefault = true
+    )
+    String drops = "Drops";
+    @ConfigItem(
+            keyName = "dropCustomConfig",
+            name = "Custom config for drops",
+            description = "Would you like to set custom config for drops",
+            position = 0,
+            section = drops
+    )
+    default boolean dropCustomConfig() {
+        return false;
+    }
+
+    @ConfigItem(
+            keyName = "dropAnnouncementValue",
+            name = "Value of drops to announce",
+            description = "At what value should Boaty recognise your new found wealth?",
+            position = 1,
+            section = drops
+    )
+    default int dropAnnouncementValue() {
+        return 1000000;
+    }
+
+    @ConfigItem(
+            keyName = "dropHiddenItems",
+            name = "Items to ignore",
+            description = "Which items should Boaty ignore? Format: item1, item2, item3",
+            position = 2,
+            section = drops
+    )
+    default String dropHiddenItems() {
+        return "Vial, Ashes, Coins, Bones, Bucket, Jug, Seaweed";
+    }
+
+    @ConfigItem(
+            keyName = "dropHighlightedItems",
+            name = "Items to Highlight",
+            description = "Which items should Boaty highlight? Format: item1, item2, item3",
+            position = 3,
+            section = drops
+    )
+    default String dropHighlightedItems() {
+        return "";
+    }
+
+
     @ConfigItem(
             keyName = "announceLogin",
             name = "When you login",
             description = "Should Boaty recognise you logging in?",
-            position = 7
+            position = 8
     )
     default boolean announceLogin() {
         return true;
@@ -95,7 +146,7 @@ public interface boatyExcitedConfig extends Config {
             keyName = "announceMaxHit",
             name = "When you get a max hit",
             description = "Should Boaty recognise you hitting good?",
-            position = 8
+            position = 9
     )
     default boolean announceMaxHit() {
         return true;
@@ -105,7 +156,7 @@ public interface boatyExcitedConfig extends Config {
             keyName = "rubyBoltSpec",
             name = "When you Ruby bolt spec",
             description = "Should Boaty recognise you speccing with a ruby bolt?",
-            position = 9
+            position = 10
     )
     default boolean rubyBoltSpec() {
         return true;
@@ -115,7 +166,7 @@ public interface boatyExcitedConfig extends Config {
             keyName = "announceLeaguesTask",
             name = "When you get a task in Leagues",
             description = "Should Boaty recognise you getting a leagues task?",
-            position = 10
+            position = 11
     )
     default boolean announceLeaguesTask() {
         return true;
@@ -126,7 +177,7 @@ public interface boatyExcitedConfig extends Config {
             keyName = "volume",
             name = "Volume",
             description = "Adjust how the audio is",
-            position = 11
+            position = 12
     )
     default int announcementVolume() {
         return 100;

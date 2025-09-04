@@ -66,7 +66,7 @@ public class boatyExcitedPlugin extends Plugin {
 	private OkHttpClient okHttpClient;
 	private final Map<Skill, Integer> oldExperience = new EnumMap<>(Skill.class);
 	private static final Pattern COLLECTION_LOG_ITEM_REGEX = Pattern.compile("New item added to your collection log:.*");
-	private static final Pattern COMBAT_TASK_REGEX = Pattern.compile("Congratulations, you've completed an? (?:\\w+) combat task:.*");
+	private static final Pattern COMBAT_TASK_REGEX = Pattern.compile("CA_ID:\\d+\\|Congratulations, you've completed an? \\w+ combat task:.*");
 	private static final Pattern LEAGUES_TASK_REGEX = Pattern.compile("Congratulations, you've completed an? (?:\\w+) task:.*");
 	private static final Pattern QUEST_REGEX = Pattern.compile("Congratulations, you've completed a quest:.*");
 	private static final Pattern HIGHLIGHTED_ITEM = Pattern.compile("^(.+)([<>])([0-9]+)$");
@@ -178,22 +178,36 @@ public class boatyExcitedPlugin extends Plugin {
 		final ItemComposition itemComposition = itemManager.getItemComposition(id);
 		final String itemName = itemComposition.getName();
 
+		String hiddenItems = "";
+		if (!config.dropCustomConfig()) {
+			hiddenItems = configManager.getConfiguration("grounditems", "hiddenItems");
+		} else {
+			hiddenItems = config.dropHiddenItems();
+		}
 		// Check hidden list, exit if found
-		final String hiddenItems = configManager.getConfiguration("grounditems", "hiddenItems");
 		if (itemListContains(hiddenItems, itemName, quantity))
 			return;
 
 		// Check notify value first as easiest to check
-		final int notifyValue = Integer.parseInt(configManager.getConfiguration("grounditems", "highValuePrice"));
+		int notifyValue = 0;
+		if (!config.dropCustomConfig()) {
+			notifyValue = Integer.parseInt(configManager.getConfiguration("grounditems", "highValuePrice"));
+		} else {
+			notifyValue = config.dropAnnouncementValue();
+		}
 		if (notifyValue <= itemComposition.getPrice()) {
 			SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
 			return;
 		}
 
+		String highlightedItems = "";
+		if (!config.dropCustomConfig()) {
+			highlightedItems = configManager.getConfiguration("grounditems", "highlightedItems");
+		} else {
+			highlightedItems = config.dropHighlightedItems();
+		}
 		// Check each item in the list individually - prevents false positives due to partial item names, e.g. A drop of "Seaweed" matching highlighted item "Seaweed spore"
-		final String highlightedItems = configManager.getConfiguration("grounditems", "highlightedItems");
-		if (itemListContains(highlightedItems, itemName, quantity))
-		{
+		if (itemListContains(highlightedItems, itemName, quantity)){
 			SoundEngine.playSound(money[random.nextInt(money.length)], config.announcementVolume());
 			return;
 		}
