@@ -26,17 +26,12 @@ public enum Sound {
     private final String resourceName;
 
     Sound(String resNam) {
-        this(resNam, false);
-    }
-
-    Sound(String resNam, boolean streamTroll) {
         resourceName = resNam;
     }
 
     String getResourceName() {
         return resourceName;
     }
-
 
     public static final Sound[] collLog = new Sound[] {
             Sound.COLLLOG1,

@@ -7,94 +7,107 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.io.*;
+import java.nio.file.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.function.Predicate.not;
+
 @Slf4j
 public class SoundFileManager {
-    private static final File DOWNLOAD_DIR = new File(RuneLite.RUNELITE_DIR.getPath() + File.separator + "boaty-excited");
+    private static final Path DOWNLOAD_DIR = Path.of(RuneLite.RUNELITE_DIR.getPath(), "boaty-excited");
     private static final String DELETE_WARNING_FILENAME = "EXTRA_FILES_WILL_BE_DELETED_BUT_FOLDERS_WILL_REMAIN";
-    private static final File DELETE_WARNING_FILE = new File(DOWNLOAD_DIR, DELETE_WARNING_FILENAME);
+    private static final Path DELETE_WARNING_FILE = DOWNLOAD_DIR.resolve(DELETE_WARNING_FILENAME);
     private static final HttpUrl RAW_GITHUB = HttpUrl.parse("https://raw.githubusercontent.com/Devdeve/boatyHypeMan-plugin/sounds");
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void ensureDownloadDirectoryExists() {
-        if (!DOWNLOAD_DIR.exists()) {
-            DOWNLOAD_DIR.mkdirs();
-        }
-        try {
-            DELETE_WARNING_FILE.createNewFile();
-        } catch (IOException ignored) { }
+    public static File getSoundFile(Sound sound) {
+        return DOWNLOAD_DIR.resolve(sound.getResourceName()).toFile();
     }
 
-    public static void downloadAllMissingSounds(final OkHttpClient okHttpClient) {
-        // Get set of existing files in our dir - existing sounds will be skipped, unexpected files (not dirs, some sounds depending on config) will be deleted
-        Set<String> filesPresent = getFilesPresent();
+    public static void prepareSoundFiles(OkHttpClient okHttpClient) {
+        ensureDownloadDirectoryExists();
+        deleteUndesiredFilesIgnoringFolders();
+        downloadNotYetPresentSounds(okHttpClient);
+    }
 
-        // Download any sounds that are not yet present but desired
-        for (Sound sound : getDesiredSoundList(true)) {
-            String fileNameToDownload = sound.getResourceName();
-            if (filesPresent.contains(fileNameToDownload)) {
-                filesPresent.remove(fileNameToDownload);
-                continue;
-            }
-
-            if (RAW_GITHUB == null) {
-                // Hush intellij, it's okay, the potential NPE can't hurt you now
-                log.error("C Engineer Completed could not download sounds due to an unexpected null RAW_GITHUB value");
-                return;
-            }
-            HttpUrl soundUrl = RAW_GITHUB.newBuilder().addPathSegment(fileNameToDownload).build();
-            Path outputPath = Paths.get(DOWNLOAD_DIR.getPath(), fileNameToDownload);
-            try (Response res = okHttpClient.newCall(new Request.Builder().url(soundUrl).build()).execute()) {
-                if (res.body() != null)
-                    Files.copy(new BufferedInputStream(res.body().byteStream()), outputPath, StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException e) {
-                log.error("C Engineer Completed could not download sounds", e);
-                return;
-            }
+    private static void ensureDownloadDirectoryExists() {
+        try {
+            if (!Files.exists(DOWNLOAD_DIR))
+                Files.createDirectories(DOWNLOAD_DIR);
+            Files.createFile(DELETE_WARNING_FILE);
+        } catch (FileAlreadyExistsException ignored) {
+            /* ignored */
+        } catch (IOException e) {
+            log.error("Could not create download directory or warning file", e);
         }
+    }
 
-        // filesPresent now contains only files in our directory that weren't desired
-        // (e.g. old versions of sounds, streamer trolls if setting was toggled)
-        // We now delete them to avoid cluttering up disk space
-        // We leave dirs behind (getFilesPresent ignores dirs) as we aren't creating those anyway, so they won't build up over time
-        for (String filename : filesPresent) {
-            File toDelete = new File(DOWNLOAD_DIR, filename);
-            toDelete.delete();
+    private static void deleteUndesiredFilesIgnoringFolders() {
+        Set<String> desiredSoundFileNames = getDesiredSounds()
+                .map(Sound::getResourceName)
+                .collect(Collectors.toSet());
+
+        Set<Path> toDelete = getFilesPresent().stream()
+                .filter(not(desiredSoundFileNames::contains))
+                .map(DOWNLOAD_DIR::resolve)
+                .collect(Collectors.toSet());
+        try {
+            for (Path pathToDelete : toDelete) {
+                Files.delete(pathToDelete);
+            }
+        } catch (IOException e) {
+            log.error("Failed to delete disused sound files", e);
         }
+    }
+
+    private static void downloadNotYetPresentSounds(OkHttpClient okHttpClient) {
+        getFilesToDownload()
+                .forEach(filename -> downloadFilename(okHttpClient, filename));
+    }
+
+    private static void downloadFilename(OkHttpClient okHttpClient, String filename) {
+        if (RAW_GITHUB == null) {
+            // Hush intellij, it's okay, the potential NPE can't hurt you now
+            log.error("Boaty hype man could not download sounds due to an unexpected null RAW_GITHUB value");
+            return;
+        }
+        HttpUrl soundUrl = RAW_GITHUB.newBuilder().addPathSegment(filename).build();
+        Request request = new Request.Builder().url(soundUrl).build();
+        try (Response res = okHttpClient.newCall(request).execute()) {
+            if (res.body() != null)
+                Files.copy(new BufferedInputStream(res.body().byteStream()), DOWNLOAD_DIR.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            log.error("Boaty hype man could not download sounds", e);
+        }
+    }
+
+    private static Stream<String> getFilesToDownload() {
+        Set<String> filesAlreadyPresent = getFilesPresent();
+
+        return getDesiredSounds()
+                .map(Sound::getResourceName)
+                .filter(not(filesAlreadyPresent::contains));
     }
 
     private static Set<String> getFilesPresent() {
-        File[] downloadDirFiles = DOWNLOAD_DIR.listFiles();
-        if (downloadDirFiles == null || downloadDirFiles.length == 0)
-            return new HashSet<>();
-
-        return Arrays.stream(downloadDirFiles)
-                .filter(file -> !file.isDirectory())
-                .map(File::getName)
-                .filter(filename -> !DELETE_WARNING_FILENAME.equals(filename))
-                .collect(Collectors.toSet());
+        try (Stream<Path> paths = Files.list(DOWNLOAD_DIR)) {
+            return paths
+                    .filter(path -> !Files.isDirectory(path))
+                    .map(Path::toFile)
+                    .map(File::getName)
+                    .filter(filename -> !DELETE_WARNING_FILENAME.equals(filename))
+                    .collect(Collectors.toSet());
+        } catch (IOException e) {
+            log.warn("Could not list files in {}, assuming it to be empty", DOWNLOAD_DIR);
+            return Set.of();
+        }
     }
 
-    private static Set<Sound> getDesiredSoundList(boolean includeStreamerTrolls) {
-        return Arrays.stream(Sound.values())
-                .filter(sound -> includeStreamerTrolls)
-                .collect(Collectors.toSet());
-    }
-
-    public static InputStream getSoundStream(Sound sound) throws FileNotFoundException {
-        return new FileInputStream(new File(DOWNLOAD_DIR, sound.getResourceName()));
+    private static Stream<Sound> getDesiredSounds() {
+        return Arrays.stream(Sound.values());
     }
 }
