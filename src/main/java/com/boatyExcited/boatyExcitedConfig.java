@@ -10,6 +10,26 @@ import net.runelite.client.config.ConfigSection;
 public interface boatyExcitedConfig extends Config {
     String GROUP = "boatyExcited";
 
+    enum PriceType
+    {
+        GE("Grand Exchange"),
+        HA("High Alchemy"),
+        STORE("Store price");
+
+        private final String displayName;
+
+        PriceType(String displayName)
+        {
+            this.displayName = displayName;
+        }
+
+        @Override
+        public String toString()
+        {
+            return displayName;
+        }
+    }
+
     @ConfigItem(
             keyName = "announceLevel",
             name = "Level ups",
@@ -110,10 +130,23 @@ public interface boatyExcitedConfig extends Config {
     }
 
     @ConfigItem(
+            keyName = "dropAnnouncementType",
+            name = "Price calculation type",
+            description = "What method should be used to calculate the price?",
+            position = 2,
+            section = drops
+    )
+
+    default PriceType dropAnnouncementType() {
+        return PriceType.GE;
+    }
+
+
+    @ConfigItem(
             keyName = "dropHiddenItems",
             name = "Items to ignore",
             description = "Which items should Boaty ignore? Format: item1, item2, item3",
-            position = 2,
+            position = 3,
             section = drops
     )
     default String dropHiddenItems() {
@@ -124,7 +157,7 @@ public interface boatyExcitedConfig extends Config {
             keyName = "dropHighlightedItems",
             name = "Items to Highlight",
             description = "Which items should Boaty highlight? Format: item1, item2, item3",
-            position = 3,
+            position = 4,
             section = drops
     )
     default String dropHighlightedItems() {

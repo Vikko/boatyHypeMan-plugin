@@ -206,7 +206,22 @@ public class boatyExcitedPlugin extends Plugin {
 		} else {
 			notifyValue = config.dropAnnouncementValue();
 		}
-		if (notifyValue <= itemComposition.getPrice()) {
+        //Grab price, dependent on what is configured. GE by default.
+		int price = 0;
+		switch(config.dropAnnouncementType()){
+		    case STORE:
+		        price = itemComposition.getPrice();
+                break;
+		    case HA:
+		        price = itemComposition.getHaPrice();
+                break;
+		    case GE:
+		    default:
+                price = itemManager.getItemPrice(id);
+
+		}
+
+		if (notifyValue <= price) {
 			playSound(money[random.nextInt(money.length)]);
 			return;
 		}
